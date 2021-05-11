@@ -158,8 +158,11 @@ export default class irc extends EventEmitter {
       if (tmpuser.cached < ~~(Date.now() / 1000) - this._recachetime)
         whois.push(u);
     }
+    whois = whois.filter(e => e.trim());
+    if(whois.length === 0)
+      return false;
     this.emit("data", ["info", `[irc] whois > ${whois}`]);
-    this.send(`WHOIS ${whois}`);
+    this.send(`WHOIS ${whois.join(',')}`);
   }
   parsePrefix(prefix) {
     prefix = /:?(.*)\!(.*)@(.*)/.exec(prefix);
