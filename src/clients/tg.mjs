@@ -1,4 +1,4 @@
-import fetch from "flumm-fetch-cookies";
+import fetch from "flumm-fetch";
 import EventEmitter from "events";
 
 const allowedFiles = [ 'audio', 'video', 'photo', 'document' ];
@@ -50,44 +50,45 @@ export default class tg extends EventEmitter {
   }
   async poll() {
     try {
-      let res = await (await fetch(`${this.api}/getUpdates?offset=${this.lastUpdate}&allowed_updates=message`)).json();
+      const _res = await (await fetch(`${this.api}/getUpdates?offset=${this.lastUpdate}&allowed_updates=message`)).json();
       
-      if(!res.ok)
-        throw { type: "tg", message: res.description};
-      if(res.result.length === 0)
+      if(!_res.ok)
+        throw { type: "tg", message: _res.description};
+      if(_res.result.length === 0)
         return;
     
-      res = res.result[res.result.length - 1];
-      this.lastUpdate = res.update_id + 1;
+      this.lastUpdate = _res.result[_res.result.length - 1].update_id + 1;
 
-      if(res.message.date >= ~~(Date.now() / 1000) - 10 && res.message.message_id !== this.lastMessage) {
-        this.lastMessage = res.message.message_id;
-        if(!this.server.user.has(res.message.from.username || res.message.from.first_name)) {
-          this.server.user.set(res.message.from.username || res.message.from.first_name, {
-            nick: res.message.from.first_name,
-            username: res.message.from.username,
-            account: res.message.from.id.toString(),
-            prefix: `${res.message.from.username}!${res.message.from.id.toString()}@${this.network}`,
-            id: res.message.from.id
-          });
-        }
-
-        try {
-          let key;
-          if(key = Object.keys(res.message).filter(t => allowedFiles.includes(t))?.[0]) {
-            let media = res.message[key];
-            if(key === 'photo')
-              media = res.message[key][res.message[key].length - 1];
-            res.message.media = await this.getFile(media.file_id);
-            res.message.text = res.message.caption;
-            delete res.message[key];
+      _res.result.forEach(async res => {
+        if(res.message.date >= ~~(Date.now() / 1000) - 10 && res.message.message_id !== this.lastMessage) {
+          this.lastMessage = res.message.message_id;
+          if(!this.server.user.has(res.message.from.username || res.message.from.first_name)) {
+            this.server.user.set(res.message.from.username || res.message.from.first_name, {
+              nick: res.message.from.first_name,
+              username: res.message.from.username,
+              account: res.message.from.id.toString(),
+              prefix: `${res.message.from.username}!${res.message.from.id.toString()}@${this.network}`,
+              id: res.message.from.id
+            });
           }
-        } catch {
-          // no media files
-        }
 
-        this.emit("data", ["message", this.reply(res.message)]);
-      }
+          try {
+            let key;
+            if(key = Object.keys(res.message).filter(t => allowedFiles.includes(t))?.[0]) {
+              let media = res.message[key];
+              if(key === 'photo')
+                media = res.message[key][res.message[key].length - 1];
+              res.message.media = await this.getFile(media.file_id);
+              res.message.text = res.message.caption;
+              delete res.message[key];
+            }
+          } catch {
+            // no media files
+          }
+
+          this.emit("data", ["message", this.reply(res.message)]);
+        }
+      });
     }
     catch(err) {
       if(!err.type)

@@ -1,6 +1,6 @@
 {
   "name": "cuffeo",
-  "version": "1.0.8-1",
+  "version": "1.1.0",
   "description": "A multi-protocol chatbot library with nearly zero dependencies.",
   "main": "src/index.mjs",
   "scripts": {},
@@ -17,7 +17,7 @@
   "author": "Flummi & jkhsjdhjs",
   "license": "MIT",
   "dependencies": {
-    "flumm-fetch-cookies": "^1.4.0"
+    "flumm-fetch": "^1.0.1"
   },
   "bugs": {
     "url": "https://github.com/kein-Bot/cuffeo/issues"

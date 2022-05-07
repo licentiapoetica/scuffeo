@@ -1,7 +1,7 @@
 import https from "https";
 import url from "url";
 import EventEmitter from "events";
-import fetch from "flumm-fetch-cookies";
+import fetch from "flumm-fetch";
 
 export default class slack extends EventEmitter {
   constructor(options) {
