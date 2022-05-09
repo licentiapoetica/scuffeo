@@ -60,7 +60,7 @@ export default class tg extends EventEmitter {
       this.lastUpdate = _res.result[_res.result.length - 1].update_id + 1;
 
       _res.result.forEach(async res => {
-        if(res.message.date >= ~~(Date.now() / 1000) - 10 && res.message.message_id !== this.lastMessage) {
+        if(res.message?.date >= ~~(Date.now() / 1000) - 10 && res.message?.message_id !== this.lastMessage) {
           this.lastMessage = res.message.message_id;
           if(!this.server.user.has(res.message.from.username || res.message.from.first_name)) {
             this.server.user.set(res.message.from.username || res.message.from.first_name, {

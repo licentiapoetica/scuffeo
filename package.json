@@ -1,6 +1,6 @@
 {
   "name": "cuffeo",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A multi-protocol chatbot library with nearly zero dependencies.",
   "main": "src/index.mjs",
   "scripts": {},
