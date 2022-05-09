@@ -147,9 +147,9 @@ export default class tg extends EventEmitter {
   }
   format(msg) {
     return msg.toString()
+      .split("&").join("&amp;")
       .split("<").join("&lt;")
       .split(">").join("&gt;")
-      .split("&").join("&amp;")
       .replace(/\[b\](.*?)\[\/b\]/g, "<b>$1</b>") // bold
       .replace(/\[i\](.*?)\[\/i\]/g, "<i>$1</i>") // italic
       .replace(/\[color=(.*?)](.*?)\[\/color\]/g, "$2")
