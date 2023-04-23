@@ -35,8 +35,8 @@ export default class slack extends EventEmitter {
     if (!res.ok)
       return this.emit("data", [ "error", res.description ]); // more infos
 
-    res.channels.forEach(channel => this.server.channel.set(channel.id, channel.name));
-    res.users.forEach(user => this.server.user.set(user.id, {
+    res.channels?.forEach(channel => this.server.channel.set(channel.id, channel.name));
+    res.users?.forEach(user => this.server.user.set(user.id, {
       account: user.name,
       nickname: user.real_name
     }));
