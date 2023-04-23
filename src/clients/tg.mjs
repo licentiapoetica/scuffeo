@@ -162,7 +162,7 @@ export default class tg extends EventEmitter {
       message: tmp.text,
       time: tmp.date,
       raw: tmp,
-      photo: tmp.media || null,
+      media: tmp.media || null,
       reply: (msg, opt = {}) => this.send(tmp.chat.id, msg, tmp.message_id, opt),
       replyAction: msg => this.send(tmp.chat.id, `Uwe ${msg}`, tmp.message_id),
       replyNotice: msg => this.send(tmp.chat.id, msg, tmp.message_id),
