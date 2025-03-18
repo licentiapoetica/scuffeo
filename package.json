@@ -1,9 +1,12 @@
 {
   "name": "cuffeo",
-  "version": "1.2.2",
+  "version": "2.0.0",
   "description": "A multi-protocol chatbot library with nearly zero dependencies.",
-  "main": "src/index.mjs",
-  "scripts": {},
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "node src/test.mjs"
+  },
   "repository": {
     "type": "git",
     "url": "gitea@git.lat:keinBot/cuffeo.git"
@@ -16,11 +19,16 @@
   ],
   "author": "Flummi & jkhsjdhjs",
   "license": "MIT",
+  "type": "module",
   "dependencies": {
     "flumm-fetch": "^1.0.1"
   },
   "bugs": {
     "url": "https://git.lat/keinBot/cuffeo/issues"
   },
-  "homepage": "https://git.lat/keinBot/cuffeo"
+  "homepage": "https://git.lat/keinBot/cuffeo",
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.2"
+  }
 }
