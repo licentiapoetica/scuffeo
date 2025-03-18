@@ -50,6 +50,11 @@ interface TelegramUpdate {
   inline_query?: any;
 }
 
+interface TelegramEvents {
+  data: [string | [string, any]];
+  error: [string];
+}
+
 export default class tg extends EventEmitter {
   private options: Required<TelegramOptions>;
   private token: string;
@@ -63,6 +68,14 @@ export default class tg extends EventEmitter {
     user: new Map(),
     me: {},
   };
+
+  emit<K extends keyof TelegramEvents>(event: K, ...args: TelegramEvents[K]): boolean {
+    return super.emit(event, ...args);
+  }
+
+  on<K extends keyof TelegramEvents>(event: K, listener: (...args: TelegramEvents[K]) => void): this {
+    return super.on(event, listener);
+  }
 
   constructor(options: TelegramOptions) {
     super();

@@ -11,7 +11,6 @@ export interface Bot {
   server: {
     channel: Map<string, string[]>;
     motd: string;
-    //user: Map<string, any>;
     user: {
       [channel: string]: any
     };

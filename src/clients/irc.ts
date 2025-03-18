@@ -29,6 +29,11 @@ interface ParsedCommand {
   params: string[];
 }
 
+interface IRCEvents {
+  data: [string | [string, any]];
+  error: [string];
+}
+
 const colors = {
   white: "00", black: "01", navy: "02", green: "03", red: "04",
   brown: "05", purple: "06", orange: "07", yellow: "08",
@@ -58,6 +63,14 @@ export default class irc extends EventEmitter {
     channel: Map<string, unknown>;
     user: Map<string, { account?: string; cached: number }>;
   };
+
+  emit<K extends keyof IRCEvents>(event: K, ...args: IRCEvents[K]): boolean {
+    return super.emit(event, ...args);
+  }
+
+  on<K extends keyof IRCEvents>(event: K, listener: (...args: IRCEvents[K]) => void): this {
+    return super.on(event, listener);
+  }
 
   constructor(options: IRCOptions) {
     super();
@@ -102,38 +115,29 @@ export default class irc extends EventEmitter {
     this.connect();
   }
 
-  connect(reconnect: boolean = false): void {
-    if(reconnect)
-      this.socket = undefined;
-  
-    if(this.options.ssl) {
-      this.socket = tls.connect({
+  private createSocket(): net.Socket | tls.TLSSocket {
+    return this.options.ssl
+      ? tls.connect({
         host: this.options.host,
         port: this.options.port,
         rejectUnauthorized: !this.options.selfSigned,
-      }, () => this.handleConnection());
-    }
-    else {
-      this.socket = net.connect({
+      })
+      : net.connect({
         host: this.options.host,
         port: this.options.port,
-      }, () => this.handleConnection());
-    }
-  
-    if(!this.socket)
-      throw new Error("Socket konnte nicht initialisiert werden.");
-  
+      });
+  }
+
+  connect(reconnect: boolean = false): void {
+    if(reconnect)
+      this.socket = undefined;
+
+    this.socket = this.createSocket();
+    this.socket.on("data", (msg: string) => this.handleData(msg));
+    this.socket.on("end", () => this.handleDisconnect());
+    this.socket.on("error", (err: Error) => this.handleError(err));
     this.socket.setEncoding("utf-8");
-    this.socket.on("data", (msg: string) => {
-      console.log("Received data:", msg);
-      this.handleData(msg);
-    });
-    this.socket.on("end", () => {
-      this.handleDisconnect();
-    });
-    this.socket.on("error", (err: Error) => {
-      this.handleError(err);
-    });
+    this.handleConnection();
   }
   
   private handleConnection(): void {

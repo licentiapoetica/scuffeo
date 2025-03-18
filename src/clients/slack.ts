@@ -40,12 +40,27 @@ interface SlackRTMStartResponse {
   description?: string;
 }
 
+interface SlackEvents {
+  data: [string | [string, any]];
+  error: [string];
+  message: [SlackMessage];
+}
+
 export default class slack extends EventEmitter {
   private options: Required<SlackOptions>;
   private token: string;
   private api: string = "https://slack.com/api";
   private interval: NodeJS.Timeout | null = null;
   private server: ServerInfo;
+  private reconnectAttempts = 0;
+
+  emit<K extends keyof SlackEvents>(event: K, ...args: SlackEvents[K]): boolean {
+    return super.emit(event, ...args);
+  }
+
+  on<K extends keyof SlackEvents>(event: K, listener: (...args: SlackEvents[K]) => void): this {
+    return super.on(event, listener);
+  }
 
   constructor(options: SlackOptions) {
     super();
@@ -92,6 +107,7 @@ export default class slack extends EventEmitter {
   
     if(res.url) {
       this.server.wss.url = url.parse(res.url);
+      this.reconnectAttempts = 0;
       this.initializeWebSocket();
     }
     else
@@ -128,7 +144,7 @@ export default class slack extends EventEmitter {
     if(!this.server.wss.socket)
       return;
   
-    this.interval = setInterval(async () => await this.ping(), 30000);
+    this.interval = setInterval(async () => await this.ping(), 3e4);
   
     this.server.wss.socket.on("data", async (data: Buffer) => {
       try {
@@ -158,12 +174,15 @@ export default class slack extends EventEmitter {
   }
 
   async reconnect(): Promise<void> {
-    this.server.wss.url = null;
-    this.server.wss.socket = null;
-    if(this.interval)
-      clearInterval(this.interval);
-    this.emit("data", ["info", "reconnecting slack"]);
-    await this.connect();
+    if(this.reconnectAttempts >= 5) {
+      this.emit("data", ["error", "Too many reconnect attempts"]);
+      return;
+    }
+    this.reconnectAttempts++;
+    setTimeout(async () => {
+      this.emit("data", ["info", "Reconnecting to Slack"]);
+      await this.connect();
+    }, this.reconnectAttempts * 1e3);
   }
 
   async getChannel(channelId: string): Promise<string | undefined> {
@@ -247,8 +266,7 @@ export default class slack extends EventEmitter {
 
   private parseData(data: Buffer): SlackMessage | undefined {
     try {
-      const json = JSON.parse(data.toString());
-      return json;
+      return JSON.parse(data.toString()) as SlackMessage;
     }
     catch(err: any) {
       this.emit("data", ["error", "failed to parse data"]);
