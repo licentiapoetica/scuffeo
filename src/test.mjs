@@ -18,7 +18,7 @@ const clients = [{
 }, {
   "type": "tg",
   "enabled": true,
-  "token": "1225044594:AAFii7CRCZsmxo1i7DSVXPgd6IFxtVd1Uig",
+  "token": "xd",
   "pollrate": 1001
 }];
 
