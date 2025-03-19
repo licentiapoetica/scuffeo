@@ -26,6 +26,12 @@ export default class irc extends EventEmitter {
     _recachetime = 60 * 30;
     _cmd = new Map();
     server;
+    emit(event, ...args) {
+        return super.emit(event, ...args);
+    }
+    on(event, listener) {
+        return super.on(event, listener);
+    }
     constructor(options) {
         super();
         this.options = {
@@ -61,35 +67,27 @@ export default class irc extends EventEmitter {
         }));
         this.connect();
     }
-    connect(reconnect = false) {
-        if (reconnect)
-            this.socket = undefined;
-        if (this.options.ssl) {
-            this.socket = tls.connect({
+    createSocket() {
+        return this.options.ssl
+            ? tls.connect({
                 host: this.options.host,
                 port: this.options.port,
                 rejectUnauthorized: !this.options.selfSigned,
-            }, () => this.handleConnection());
-        }
-        else {
-            this.socket = net.connect({
+            })
+            : net.connect({
                 host: this.options.host,
                 port: this.options.port,
-            }, () => this.handleConnection());
-        }
-        if (!this.socket)
-            throw new Error("Socket konnte nicht initialisiert werden.");
+            });
+    }
+    connect(reconnect = false) {
+        if (reconnect)
+            this.socket = undefined;
+        this.socket = this.createSocket();
+        this.socket.on("data", (msg) => this.handleData(msg));
+        this.socket.on("end", () => this.handleDisconnect());
+        this.socket.on("error", (err) => this.handleError(err));
         this.socket.setEncoding("utf-8");
-        this.socket.on("data", (msg) => {
-            console.log("Received data:", msg);
-            this.handleData(msg);
-        });
-        this.socket.on("end", () => {
-            this.handleDisconnect();
-        });
-        this.socket.on("error", (err) => {
-            this.handleError(err);
-        });
+        this.handleConnection();
     }
     handleConnection() {
         this.send(`NICK ${this.options.nickname}`);
