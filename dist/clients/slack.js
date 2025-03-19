@@ -1,13 +1,19 @@
 import https from "node:https";
 import url from "node:url";
 import EventEmitter from "node:events";
-import fetch from "flumm-fetch";
 export default class slack extends EventEmitter {
     options;
     token;
     api = "https://slack.com/api";
     interval = null;
     server;
+    reconnectAttempts = 0;
+    emit(event, ...args) {
+        return super.emit(event, ...args);
+    }
+    on(event, listener) {
+        return super.on(event, listener);
+    }
     constructor(options) {
         super();
         this.options = {
@@ -48,6 +54,7 @@ export default class slack extends EventEmitter {
         });
         if (res.url) {
             this.server.wss.url = url.parse(res.url);
+            this.reconnectAttempts = 0;
             this.initializeWebSocket();
         }
         else
@@ -79,7 +86,7 @@ export default class slack extends EventEmitter {
     handleWebSocketEvents() {
         if (!this.server.wss.socket)
             return;
-        this.interval = setInterval(async () => await this.ping(), 30000);
+        this.interval = setInterval(async () => await this.ping(), 3e4);
         this.server.wss.socket.on("data", async (data) => {
             try {
                 const parsedData = this.parseData(data);
@@ -105,12 +112,15 @@ export default class slack extends EventEmitter {
         });
     }
     async reconnect() {
-        this.server.wss.url = null;
-        this.server.wss.socket = null;
-        if (this.interval)
-            clearInterval(this.interval);
-        this.emit("data", ["info", "reconnecting slack"]);
-        await this.connect();
+        if (this.reconnectAttempts >= 5) {
+            this.emit("data", ["error", "Too many reconnect attempts"]);
+            return;
+        }
+        this.reconnectAttempts++;
+        setTimeout(async () => {
+            this.emit("data", ["info", "Reconnecting to Slack"]);
+            await this.connect();
+        }, this.reconnectAttempts * 1e3);
     }
     async getChannel(channelId) {
         if (this.server.channel.has(channelId))
@@ -182,8 +192,7 @@ export default class slack extends EventEmitter {
     }
     parseData(data) {
         try {
-            const json = JSON.parse(data.toString());
-            return json;
+            return JSON.parse(data.toString());
         }
         catch (err) {
             this.emit("data", ["error", "failed to parse data"]);

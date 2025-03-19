@@ -20,9 +20,6 @@
   "author": "Flummi & jkhsjdhjs",
   "license": "MIT",
   "type": "module",
-  "dependencies": {
-    "flumm-fetch": "^1.0.1"
-  },
   "bugs": {
     "url": "https://git.lat/keinBot/cuffeo/issues"
   },

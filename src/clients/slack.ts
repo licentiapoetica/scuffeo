@@ -2,7 +2,6 @@ import https from "node:https";
 import net from "node:net";
 import url from "node:url";
 import EventEmitter from "node:events";
-import fetch from "flumm-fetch";
 
 interface SlackOptions {
   token: string;

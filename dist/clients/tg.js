@@ -1,4 +1,3 @@
-import fetch from "flumm-fetch";
 import EventEmitter from "events";
 const allowedFiles = ["audio", "video", "photo", "document"];
 export default class tg extends EventEmitter {
@@ -14,6 +13,12 @@ export default class tg extends EventEmitter {
         user: new Map(),
         me: {},
     };
+    emit(event, ...args) {
+        return super.emit(event, ...args);
+    }
+    on(event, listener) {
+        return super.on(event, listener);
+    }
     constructor(options) {
         super();
         this.options = {
@@ -143,7 +148,13 @@ export default class tg extends EventEmitter {
         };
         if (reply)
             body["reply_to_message_id"] = reply;
-        const opts = { method: "POST", body };
+        const opts = {
+            method: "POST",
+            body: JSON.stringify(body),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        };
         return await (await fetch(`${this.api}/sendMessage`, opts)).json();
     }
     format(msg) {
