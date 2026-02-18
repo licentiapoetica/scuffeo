@@ -305,49 +305,16 @@ export default class matrix extends EventEmitter {
       if (recipient.startsWith('@')) {
           console.log(`[Matrix] Sending DM to ${recipient}`);
           try {
-              // Try to find existing DM
-              // Note: implementation details vary by SDK version, simplified approach:
-              const accountData = this.client.getAccountData('m.direct');
-              let roomId;
-              
-              if (accountData) {
-                  const directRooms = accountData.getContent();
-                  const rooms = directRooms[recipient];
-                  if (rooms && rooms.length > 0) {
-                      roomId = rooms[0]; // Pick first one
-                      // Check if we are still in it? Assumed yes for now.
-                  }
-              }
-
-              if (!roomId) {
-                  // Create new DM
-                  const createOpts = {
-                      visibility: "private",
-                      invite: [recipient],
-                      is_direct: true
-                  };
-                  const result = await this.client.createRoom(createOpts);
-                  roomId = result.room_id;
-
-                  // Manually update m.direct to ensure we remember this room for this user
-                  if (roomId) {
-                      try {
-                          const newDirects = accountData ? accountData.getContent() : {};
-                          const userRooms = newDirects[recipient] || [];
-                          if (!userRooms.includes(roomId)) {
-                              userRooms.push(roomId);
-                              newDirects[recipient] = userRooms;
-                              await this.client.setAccountData('m.direct', newDirects);
-                              console.log(`[Matrix] Updated m.direct for ${recipient} with ${roomId}`);
-                          }
-                      } catch (err) {
-                          console.error(`[Matrix] Failed to update m.direct:`, err);
-                      }
-                  }
-              }
-              
-              if (roomId) {
-                  await this.send(roomId, msg);
+              // Always create a fresh DM room
+              const createOpts = {
+                  visibility: "private",
+                  invite: [recipient],
+                  is_direct: true
+              };
+              const result = await this.client.createRoom(createOpts);
+              if (result && result.room_id) {
+                  await this.send(result.room_id, msg);
+                  console.log(`[Matrix] Sent DM to ${recipient} in new room ${result.room_id}`);
               }
           } catch(e) {
               console.error(`[Matrix] Failed to send DM to ${recipient}:`, e);
