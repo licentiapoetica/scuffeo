@@ -169,7 +169,9 @@ export default class matrix extends EventEmitter {
                     url: mediaUrl,
                     mxcUrl: mxcUrl,
                     type: relatedContent.msgtype,
-                    filename: relatedContent.filename || relatedContent.body // fallback to body if filename missing
+                    filename: relatedContent.filename || relatedContent.body, // fallback to body if filename missing
+                    filename: relatedContent.filename || relatedContent.body, // fallback to body if filename missing
+                    mimetype: relatedContent.info?.mimetype || null
                 };
             }
         } catch (e) {
