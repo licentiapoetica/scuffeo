@@ -170,7 +170,6 @@ export default class matrix extends EventEmitter {
                     mxcUrl: mxcUrl,
                     type: relatedContent.msgtype,
                     filename: relatedContent.filename || relatedContent.body, // fallback to body if filename missing
-                    filename: relatedContent.filename || relatedContent.body, // fallback to body if filename missing
                     mimetype: relatedContent.info?.mimetype || null
                 };
             }
